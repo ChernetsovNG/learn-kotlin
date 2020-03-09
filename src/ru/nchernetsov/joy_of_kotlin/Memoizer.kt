@@ -1,4 +1,4 @@
-package ru.nchernetsov
+package ru.nchernetsov.joy_of_kotlin
 
 import java.util.concurrent.ConcurrentHashMap
 
@@ -6,7 +6,8 @@ fun main() {
     val startTime1 = System.currentTimeMillis()
     val result1 = longComputation(43)
     val time1 = System.currentTimeMillis() - startTime1
-    val memoizedLongComputation = Memoizer.memoize(::longComputation)
+    val memoizedLongComputation =
+        Memoizer.memoize(::longComputation)
     val startTime2 = System.currentTimeMillis()
     val result2 = memoizedLongComputation(43)
     val time2 = System.currentTimeMillis() - startTime2
@@ -35,6 +36,7 @@ class Memoizer<T, U> private constructor() {
         }
 
     companion object {
-        fun <T, U> memoize(function: (T) -> U): (T) -> U = Memoizer<T, U>().doMemoize(function)
+        fun <T, U> memoize(function: (T) -> U): (T) -> U = Memoizer<T, U>()
+            .doMemoize(function)
     }
 }

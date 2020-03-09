@@ -1,8 +1,10 @@
-package ru.nchernetsov
+package ru.nchernetsov.joy_of_kotlin
 
 fun main() {
-    val list1: List<Int> = List(1, 2, 3)
-    val list2: List<Int> = List(4, 5, 6)
+    val list1: List<Int> =
+        List(1, 2, 3)
+    val list2: List<Int> =
+        List(4, 5, 6)
     println(list1.concat(list2).getAt(0))
 }
 
@@ -38,20 +40,43 @@ sealed class List<out A> {
             getAt(this as Cons, index)
     }
 
-    fun lastSafe(): Result<A> = foldLeft(Result()) { { y: A -> Result(y) } }
+    fun lastSafe(): Result<A> = foldLeft(Result()) { { y: A ->
+        Result(
+            y
+        )
+    } }
 
     abstract fun headSafe(): Result<A>
 
-    fun <B> map(f: (A) -> B): List<B> = foldLeft(Nil) { acc: List<B> -> { h: A -> Cons(f(h), acc) } }.reverse()
-    fun filter(p: (A) -> Boolean): List<A> = coFoldRight(Nil) { h -> { t: List<A> -> if (p(h)) Cons(h, t) else t } }
-    fun <B> flatMap(f: (A) -> List<B>): List<B> = flatten(map(f))
+    fun <B> map(f: (A) -> B): List<B> = foldLeft(Nil) { acc: List<B> -> { h: A ->
+        Cons(
+            f(h),
+            acc
+        )
+    } }.reverse()
+    fun filter(p: (A) -> Boolean): List<A> = coFoldRight(
+        Nil
+    ) { h -> { t: List<A> -> if (p(h)) Cons(
+        h,
+        t
+    ) else t } }
+    fun <B> flatMap(f: (A) -> List<B>): List<B> =
+        flatten(map(f))
 
     fun length(): Int = foldLeft(0) { { _ -> it + 1 } }
     abstract fun lengthMemoized(): Int
 
-    fun <B> foldLeft(identity: B, f: (B) -> (A) -> B): B = foldLeft(identity, this, f)
-    fun <B> foldRight(identity: B, f: (A) -> (B) -> B): B = foldRight(this, identity, f)
-    fun <B> coFoldRight(identity: B, f: (A) -> (B) -> B): B = coFoldRight(identity, this.reverse(), identity, f)
+    fun <B> foldLeft(identity: B, f: (B) -> (A) -> B): B =
+        foldLeft(identity, this, f)
+    fun <B> foldRight(identity: B, f: (A) -> (B) -> B): B =
+        foldRight(this, identity, f)
+    fun <B> coFoldRight(identity: B, f: (A) -> (B) -> B): B =
+        coFoldRight(
+            identity,
+            this.reverse(),
+            identity,
+            f
+        )
     abstract fun <B> foldLeft(identity: B, zero: B, f: (B) -> (A) -> B): B
 
     fun init(): List<A> = when (this) {
@@ -60,10 +85,13 @@ sealed class List<out A> {
     }
 
     fun reverse(): List<A> = foldLeft(invoke()) { acc -> { acc.cons(it) } }
-    fun concat(list: List<@UnsafeVariance A>): List<A> = concat(this, list)
-    fun dropWhile(p: (A) -> Boolean): List<A> = dropWhile(this, p)
+    fun concat(list: List<@UnsafeVariance A>): List<A> =
+        concat(this, list)
+    fun dropWhile(p: (A) -> Boolean): List<A> =
+        dropWhile(this, p)
     abstract fun drop(n: Int): List<A>
-    fun cons(a: @UnsafeVariance A): List<A> = Cons(a, this)
+    fun cons(a: @UnsafeVariance A): List<A> =
+        Cons(a, this)
 
     fun setHead(a: @UnsafeVariance A): List<A> = when (this) {
         Nil -> throw IllegalStateException("setHead called on an empty list")
@@ -76,7 +104,8 @@ sealed class List<out A> {
         override val length = 0
 
         override fun <B> foldLeft(identity: B, zero: B, f: (B) -> (Nothing) -> B): B = identity
-        override fun headSafe(): Result<Nothing> = Result()
+        override fun headSafe(): Result<Nothing> =
+            Result()
         override fun lengthMemoized() = 0
         override fun isEmpty() = true
         override fun toString(): String = "[NIL]"
@@ -98,7 +127,8 @@ sealed class List<out A> {
             return foldLeft(identity, zero, this, f)
         }
 
-        override fun headSafe(): Result<A> = Result(head)
+        override fun headSafe(): Result<A> =
+            Result(head)
         override fun lengthMemoized() = length
         override fun isEmpty() = false
         override fun toString(): String = "[${toString("", this)}NIL]"
@@ -126,30 +156,49 @@ sealed class List<out A> {
 
         private tailrec fun <A> dropWhile(list: List<A>, p: (A) -> Boolean): List<A> = when (list) {
             Nil -> list
-            is Cons -> if (p(list.head)) dropWhile(list.tail, p) else list
+            is Cons -> if (p(list.head)) dropWhile(
+                list.tail,
+                p
+            ) else list
         }
 
         fun <A> concat(list1: List<A>, list2: List<A>): List<A> = when (list1) {
             Nil -> list2
-            is Cons -> concat(list1.tail, list2).cons(list1.head)
+            is Cons -> concat(
+                list1.tail,
+                list2
+            ).cons(list1.head)
         }
 
         tailrec fun <A> reverse(acc: List<A>, list: List<A>): List<A> =
             when (list) {
                 Nil -> acc
-                is Cons -> reverse(acc.cons(list.head), list.tail)
+                is Cons -> reverse(
+                    acc.cons(list.head),
+                    list.tail
+                )
             }
 
         tailrec fun <A, B> foldLeft(acc: B, list: List<A>, f: (B) -> (A) -> B): B =
             when (list) {
                 Nil -> acc
-                is Cons -> foldLeft(f(acc)(list.head), list.tail, f)
+                is Cons -> foldLeft(
+                    f(acc)(list.head),
+                    list.tail,
+                    f
+                )
             }
 
         fun <A, B> foldRight(list: List<A>, identity: B, f: (A) -> (B) -> B): B =
             when (list) {
                 Nil -> identity
-                is Cons -> f(list.head)(foldRight(list.tail, identity, f))
+                is Cons -> f(list.head)(
+                    foldRight(
+                        list.tail,
+                        identity,
+                        f
+                    )
+                )
             }
 
         fun sum(list: List<Int>): Int = list.foldLeft(0, { x -> { y -> x + y } })
@@ -158,10 +207,17 @@ sealed class List<out A> {
         private tailrec fun <A, B> coFoldRight(acc: B, list: List<A>, identity: B, f: (A) -> (B) -> B): B =
             when (list) {
                 Nil -> acc
-                is Cons -> coFoldRight(f(list.head)(acc), list.tail, identity, f)
+                is Cons -> coFoldRight(
+                    f(list.head)(acc),
+                    list.tail,
+                    identity,
+                    f
+                )
             }
 
-        fun <A> flatten(list: List<List<A>>): List<A> = list.coFoldRight(Nil) { x -> x::concat }
+        fun <A> flatten(list: List<List<A>>): List<A> = list.coFoldRight(
+            Nil
+        ) { x -> x::concat }
 
         fun <A, B, C> zipWith(list1: List<A>, list2: List<B>, f: (A) -> (B) -> C): List<C> {
             tailrec fun zipWith(acc: List<C>, list1: List<A>, list2: List<B>): List<C> = when (list1) {
@@ -178,7 +234,10 @@ sealed class List<out A> {
             list1.flatMap { a -> list2.map { b -> f(a)(b) } }
 
         fun <A, B> unzip(list: List<Pair<A, B>>): Pair<List<A>, List<B>> =
-            list.coFoldRight(Pair(invoke(), invoke())) { pair ->
+            list.coFoldRight(Pair(
+                invoke(),
+                invoke()
+            )) { pair ->
                 { listPair: Pair<List<A>, List<B>> ->
                     Pair(listPair.first.cons(pair.first), listPair.second.cons(pair.second))
                 }

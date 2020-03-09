@@ -1,6 +1,5 @@
-package ru.nchernetsov
+package ru.nchernetsov.joy_of_kotlin
 
-import map2
 import java.io.Serializable
 
 fun main() {
@@ -10,7 +9,9 @@ fun main() {
     }
 }
 
-fun <A> flattenResult(list: List<Result<A>>): List<A> = list.flatMap { ra -> ra.map { List(it) }.getOrElse(List()) }
+fun <A> flattenResult(list: List<Result<A>>): List<A> = list.flatMap { ra -> ra.map {
+    List(it)
+}.getOrElse(List()) }
 
 sealed class Result<out A> : Serializable {
 
@@ -51,9 +52,9 @@ sealed class Result<out A> : Serializable {
             is Failure -> try {
                 defaultValue()
             } catch (e: RuntimeException) {
-                Result.failure<A>(e)
+                failure<A>(e)
             } catch (e: Exception) {
-                Result.failure<A>(RuntimeException(e))
+                failure<A>(RuntimeException(e))
             }
             is Empty -> Empty
         }
@@ -100,8 +101,10 @@ sealed class Result<out A> : Serializable {
             onFailure(exception)
 
         override fun forEach(effect: (A) -> Unit) {}
-        override fun <B> map(f: (A) -> B): Result<B> = Failure(exception)
-        override fun <B> flatMap(f: (A) -> Result<B>): Result<B> = Failure(exception)
+        override fun <B> map(f: (A) -> B): Result<B> =
+            Failure(exception)
+        override fun <B> flatMap(f: (A) -> Result<B>): Result<B> =
+            Failure(exception)
         override fun toString(): String = "Failure(${exception.message})"
     }
 
@@ -112,8 +115,10 @@ sealed class Result<out A> : Serializable {
         ) = onEmpty()
 
         override fun forEach(effect: (Nothing) -> Unit) {}
-        override fun <B> map(f: (Nothing) -> B): Result<B> = Empty
-        override fun <B> flatMap(f: (Nothing) -> Result<B>): Result<B> = Empty
+        override fun <B> map(f: (Nothing) -> B): Result<B> =
+            Empty
+        override fun <B> flatMap(f: (Nothing) -> Result<B>): Result<B> =
+            Empty
         override fun toString(): String = "Empty"
     }
 
@@ -123,10 +128,13 @@ sealed class Result<out A> : Serializable {
             else -> Success(a)
         }
 
-        fun <A> failure(message: String): Result<A> = Failure(IllegalStateException(message))
+        fun <A> failure(message: String): Result<A> =
+            Failure(IllegalStateException(message))
 
-        fun <A> failure(exception: RuntimeException): Result<A> = Failure(exception)
+        fun <A> failure(exception: RuntimeException): Result<A> =
+            Failure(exception)
 
-        fun <A> failure(exception: Exception): Result<A> = Failure(IllegalStateException(exception))
+        fun <A> failure(exception: Exception): Result<A> =
+            Failure(IllegalStateException(exception))
     }
 }

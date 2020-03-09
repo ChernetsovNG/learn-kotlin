@@ -1,4 +1,4 @@
-import ru.nchernetsov.List
+package ru.nchernetsov.joy_of_kotlin
 
 fun main() {
     val f: (Int) -> (Int) -> Int = { x -> { y -> x * y } }
@@ -32,7 +32,11 @@ fun <A, B> lift(f: (A) -> B): (Option<A>) -> Option<B> = {
 data class Toon(val firstName: String, val lastName: String, val email: Option<String>) {
     companion object {
         operator fun invoke(firstName: String, lastName: String, email: String? = null) =
-            Toon(firstName, lastName, Option(email))
+            Toon(
+                firstName,
+                lastName,
+                Option(email)
+            )
     }
 }
 
@@ -46,7 +50,9 @@ sealed class Option<out A> {
 
     fun <B> map(f: (A) -> B): Option<B> = when (this) {
         is None -> None
-        is Some -> Some(f(value))
+        is Some -> Some(
+            f(value)
+        )
     }
 
     fun getOrElse(default: () -> @UnsafeVariance A): A = when (this) {
