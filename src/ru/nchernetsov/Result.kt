@@ -7,11 +7,20 @@ fun main() {
         this.containsKey(key) -> Result(this[key])
         else -> Result.failure("Key $key not found in map")
     }
-
-
 }
 
 sealed class Result<out A> : Serializable {
+
+    fun <A, B, C> map2(a: Result<A>, b: Result<B>, f: (A) -> (B) -> C): Result<C> = lift2(f)(a)(b)
+
+    fun <A, B> lift(f: (A) -> B): (Result<A>) -> Result<B> = { it.map(f) }
+
+    fun <A, B, C> lift2(f: (A) -> (B) -> C): (Result<A>) -> (Result<B>) -> Result<C> =
+            { a ->
+                { b ->
+                    a.map(f).flatMap { b.map(it) }
+                }
+            }
 
     abstract fun forEachOrElse(onSuccess: (A) -> Unit, onFailure: (RuntimeException) -> Unit, onEmpty: () -> Unit)
 
@@ -34,17 +43,17 @@ sealed class Result<out A> : Serializable {
     }
 
     fun orElse(defaultValue: () -> Result<@UnsafeVariance A>): Result<A> =
-        when (this) {
-            is Success -> this
-            is Failure -> try {
-                defaultValue()
-            } catch (e: RuntimeException) {
-                failure(e)
-            } catch (e: Exception) {
-                failure(RuntimeException(e))
+            when (this) {
+                is Success -> this
+                is Failure -> try {
+                    defaultValue()
+                } catch (e: RuntimeException) {
+                    failure(e)
+                } catch (e: Exception) {
+                    failure(RuntimeException(e))
+                }
+                is Empty -> Empty
             }
-            is Empty -> Empty
-        }
 
     fun getOrElse(defaultValue: @UnsafeVariance A): A = when (this) {
         is Success -> this.value
@@ -57,7 +66,7 @@ sealed class Result<out A> : Serializable {
 
     internal class Success<out A>(internal val value: A) : Result<A>() {
         override fun forEachOrElse(onSuccess: (A) -> Unit, onFailure: (RuntimeException) -> Unit, onEmpty: () -> Unit) =
-            onSuccess(value)
+                onSuccess(value)
 
         override fun forEach(effect: (A) -> Unit) {
             effect(value)
@@ -85,7 +94,7 @@ sealed class Result<out A> : Serializable {
 
     internal class Failure<out A>(internal val exception: RuntimeException) : Result<A>() {
         override fun forEachOrElse(onSuccess: (A) -> Unit, onFailure: (RuntimeException) -> Unit, onEmpty: () -> Unit) =
-            onFailure(exception)
+                onFailure(exception)
 
         override fun forEach(effect: (A) -> Unit) {}
         override fun <B> map(f: (A) -> B): Result<B> = Failure(exception)
@@ -95,9 +104,10 @@ sealed class Result<out A> : Serializable {
 
     internal object Empty : Result<Nothing>() {
         override fun forEachOrElse(
-            onSuccess: (Nothing) -> Unit, onFailure: (RuntimeException) -> Unit,
-            onEmpty: () -> Unit
+                onSuccess: (Nothing) -> Unit, onFailure: (RuntimeException) -> Unit,
+                onEmpty: () -> Unit
         ) = onEmpty()
+
         override fun forEach(effect: (Nothing) -> Unit) {}
         override fun <B> map(f: (Nothing) -> B): Result<B> = Empty
         override fun <B> flatMap(f: (Nothing) -> Result<B>): Result<B> = Empty
