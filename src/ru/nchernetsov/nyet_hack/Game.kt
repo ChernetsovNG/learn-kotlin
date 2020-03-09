@@ -27,7 +27,7 @@ fun main() {
             "has some minor wounds"
         }
         in 15..74 -> "looks pretty hurt"
-        else -> "is in awful condigion!"
+        else -> "is in awful condition!"
     }
 
     println("(Aura: $auraColor) (Blessed: ${if (isBlessed) "YES" else "NO"})")
