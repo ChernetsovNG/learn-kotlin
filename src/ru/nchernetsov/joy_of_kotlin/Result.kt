@@ -9,9 +9,11 @@ fun main() {
     }
 }
 
-fun <A> flattenResult(list: List<Result<A>>): List<A> = list.flatMap { ra -> ra.map {
-    List(it)
-}.getOrElse(List()) }
+fun <A> flattenResult(list: List<Result<A>>): List<A> = list.flatMap { ra ->
+    ra.map {
+        List(it)
+    }.getOrElse(List())
+}
 
 sealed class Result<out A> : Serializable {
 
@@ -68,6 +70,8 @@ sealed class Result<out A> : Serializable {
     abstract fun <B> map(f: (A) -> B): Result<B>
     abstract fun <B> flatMap(f: (A) -> Result<B>): Result<B>
 
+    abstract fun isSuccess(): Boolean
+
     internal class Success<out A>(internal val value: A) : Result<A>() {
         override fun forEachOrElse(onSuccess: (A) -> Unit, onFailure: (RuntimeException) -> Unit, onEmpty: () -> Unit) =
             onSuccess(value)
@@ -93,8 +97,9 @@ sealed class Result<out A> : Serializable {
         }
 
         override fun toString(): String = "Success(${value})"
-    }
 
+        override fun isSuccess(): Boolean = true
+    }
 
     internal class Failure<out A>(internal val exception: RuntimeException) : Result<A>() {
         override fun forEachOrElse(onSuccess: (A) -> Unit, onFailure: (RuntimeException) -> Unit, onEmpty: () -> Unit) =
@@ -103,23 +108,32 @@ sealed class Result<out A> : Serializable {
         override fun forEach(effect: (A) -> Unit) {}
         override fun <B> map(f: (A) -> B): Result<B> =
             Failure(exception)
+
         override fun <B> flatMap(f: (A) -> Result<B>): Result<B> =
             Failure(exception)
+
         override fun toString(): String = "Failure(${exception.message})"
+
+        override fun isSuccess(): Boolean = false
     }
 
     internal object Empty : Result<Nothing>() {
         override fun forEachOrElse(
-            onSuccess: (Nothing) -> Unit, onFailure: (RuntimeException) -> Unit,
+            onSuccess: (Nothing) -> Unit,
+            onFailure: (RuntimeException) -> Unit,
             onEmpty: () -> Unit
         ) = onEmpty()
 
         override fun forEach(effect: (Nothing) -> Unit) {}
         override fun <B> map(f: (Nothing) -> B): Result<B> =
             Empty
+
         override fun <B> flatMap(f: (Nothing) -> Result<B>): Result<B> =
             Empty
+
         override fun toString(): String = "Empty"
+
+        override fun isSuccess(): Boolean = false
     }
 
     companion object {
@@ -136,5 +150,7 @@ sealed class Result<out A> : Serializable {
 
         fun <A> failure(exception: Exception): Result<A> =
             Failure(IllegalStateException(exception))
+
+        fun <A> empty(): Result<A> = Empty
     }
 }
